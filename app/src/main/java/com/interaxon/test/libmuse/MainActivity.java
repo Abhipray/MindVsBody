@@ -175,19 +175,20 @@ public class MainActivity extends Activity implements OnClickListener {
         }
 
         private int counter = 0;
-        private double[][] averages = new double[4][100];
+        private double[][] averages = new double[4][200];
         private void updateEeg(final ArrayList<Double> data) {
             Activity activity = activityRef.get();
             if (activity != null) {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (counter >= 100) {
+                        if (counter >= 200) {
                             byte[] avg = new byte[1];
-                            avg[0] = (byte)calculateAverage(averages);
-//                            Log.i("average", ((Double)((double)avg[0])).toString());
+                            double val = calculateAverage(averages);
+                            avg[0] = (byte)val;
+                            Log.i("",((Double)val).toString());
                             BTAI.sendData(avg);
-                            averages = new double[4][100];
+                            averages = new double[4][200];
                             counter = 0;
                         }
 
@@ -214,15 +215,14 @@ public class MainActivity extends Activity implements OnClickListener {
             }
         }
 
-        private final double MAX = 8E7;
-        private final double MIN = 1E7;
+        private final double MAX = 3.2E5;
+        private final double MIN = 2E5 ;
         private double calculateAverage(double[][] avgs) {
             double avg = 0;
             for (int i = 0; i < avgs.length; i++)
                 for (int j = 0; j < avgs[i].length; j++)
                     avg += Math.pow(avgs[i][j], 2);
-            Log.i("val", ((Double)avg).toString());
-            return (MAX - Math.sqrt(avg)) / (MAX - MIN) * 255;
+            return ((MAX - Math.sqrt(avg)) / (MAX - MIN)) * 255.0;
         }
 
         private void updateAlphaRelative(final ArrayList<Double> data) {
