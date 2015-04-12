@@ -213,72 +213,6 @@ public class MainActivity extends Activity implements OnClickListener {
             }
         }
 
-        private void updateAccelerometer(final ArrayList<Double> data) {
-            Activity activity = activityRef.get();
-            if (activity != null) {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        TextView acc_x = (TextView) findViewById(R.id.acc_x);
-                        TextView acc_y = (TextView) findViewById(R.id.acc_y);
-                        TextView acc_z = (TextView) findViewById(R.id.acc_z);
-                        acc_x.setText(String.format(
-                                "%6.2f", data.get(Accelerometer.FORWARD_BACKWARD.ordinal())));
-                        acc_y.setText(String.format(
-                                "%6.2f", data.get(Accelerometer.UP_DOWN.ordinal())));
-                        acc_z.setText(String.format(
-                                "%6.2f", data.get(Accelerometer.LEFT_RIGHT.ordinal())));
-                    }
-                });
-            }
-        }
-
-        private int counter = 0;
-        private double[][] averages = new double[4][200];
-        private void updateEeg(final ArrayList<Double> data) {
-            Activity activity = activityRef.get();
-            if (activity != null) {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (counter >= 200) {
-                            byte[] avg = new byte[1];
-                            avg[0] = (byte) calculateAverage(averages,200);
-                            BTAI.sendData(avg);
-                            averages = new double[4][200];
-                            counter = 0;
-                        }
-
-                        TextView tp9 = (TextView) findViewById(R.id.eeg_tp9);
-                        TextView fp1 = (TextView) findViewById(R.id.eeg_fp1);
-                        TextView fp2 = (TextView) findViewById(R.id.eeg_fp2);
-                        TextView tp10 = (TextView) findViewById(R.id.eeg_tp10);
-                        tp9.setText(String.format(
-                                "%6.2f", data.get(Eeg.TP9.ordinal())));
-                        fp1.setText(String.format(
-                                "%6.2f", data.get(Eeg.FP1.ordinal())));
-                        fp2.setText(String.format(
-                                "%6.2f", data.get(Eeg.FP2.ordinal())));
-                        tp10.setText(String.format(
-                                "%6.2f", data.get(Eeg.TP10.ordinal())));
-
-                        averages[0][counter] = data.get(Eeg.TP9.ordinal());
-                        averages[1][counter] = data.get(Eeg.FP1.ordinal());
-                        averages[2][counter] = data.get(Eeg.FP2.ordinal());
-                        averages[3][counter] = data.get(Eeg.TP10.ordinal());
-                        counter++;
-
-                        // Update graph to reflect this set of samples
-                        double[] allAverages = new double[SAMPLE_LENGTH];
-                        for (int i = 0; i < SAMPLE_LENGTH; i++) {
-                            allAverages[i] = averages[0][i] + averages[1][i] + averages[2][i] + averages[3][i];
-                        }
-                        updateChart((LineChart) findViewById(R.id.line_chart), allAverages);
-                    }
-                });
-            }
-        }
-
         /**
          * Updates the plot based on the newly sampled data points.
          *
@@ -294,18 +228,18 @@ public class MainActivity extends Activity implements OnClickListener {
             }
 
             // Initialize x and y values for plotting
-            ArrayList<String> xVals = new ArrayList<String>();
+            ArrayList<String> xVals = new ArrayList<>();
             for (int i = 0; i < SAMPLE_LENGTH; i++) {
                 xVals.add((i) + "");
             }
-            ArrayList<Entry> yVals = new ArrayList<Entry>();
+            ArrayList<Entry> yVals = new ArrayList<>();
             for (int i = 0; i < SAMPLE_LENGTH; i++) {
                 yVals.add(new Entry((float)dataPoints[i], i));
             }
 
             // Create the data sets and add it to the plot's LineData
             LineDataSet dataSet = new LineDataSet(yVals, "DataSet 1");
-            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            ArrayList<LineDataSet> dataSets = new ArrayList<>();
             dataSets.add(dataSet);
             LineData data = new LineData(xVals, dataSets);
 
@@ -326,10 +260,10 @@ public class MainActivity extends Activity implements OnClickListener {
 
         private double calculateAverage(double[][] avgs, int total) {
             double sum = 0.0;
-            for (int i = 0; i < avgs.length; i++)
-                for (int j = 0; j < avgs[i].length; j++)
-                    sum += avgs[i][j];
-            return sum/total;
+            for (double[] avg : avgs)
+                for (int j = 0; j < avg.length; j++)
+                    sum += avg[j];
+            return sum / total;
         }
         private double[][] averages_alpha = new double[2][50];
         private double final_alpha;
@@ -466,7 +400,6 @@ public class MainActivity extends Activity implements OnClickListener {
                             averages_theta[1][i] = data.get(Eeg.FP1.ordinal());
                             averages_theta[2][i] = data.get(Eeg.FP2.ordinal());
                             averages_theta[3][i] = data.get(Eeg.TP10.ordinal());
-                            counter++;
                             //return avg[0] somehow
                         }
                         byte[] avg = new byte[1];
@@ -520,7 +453,8 @@ public class MainActivity extends Activity implements OnClickListener {
         Log.i("Muse Headband", "libmuse version=" + LibMuseVersion.SDK_VERSION);
 
         try {
-            network = (BasicNetwork) EncogDirectoryPersistence.loadObject(getAssets().open("network"));
+            network =
+                    (BasicNetwork)EncogDirectoryPersistence.loadObject(getAssets().open("network"));
             System.out.println("ok");
         } catch (IOException e) {
             e.printStackTrace();
@@ -528,7 +462,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
         if (enable_BT_arm) {
             BTAI = new Bluetooth_Blend_Interface(this, enable_BT_arm);
-            registerReceiver(BTAI.get_mGattUpdateReceiver(), Bluetooth_Blend_Interface.makeGattUpdateIntentFilter());
+            registerReceiver(BTAI.get_mGattUpdateReceiver(),
+                    Bluetooth_Blend_Interface.makeGattUpdateIntentFilter());
         }
         mConnectBtn = (Button)findViewById(R.id.connect_btn);
         mConnectBtn.setOnClickListener(new View.OnClickListener() {
@@ -550,13 +485,13 @@ public class MainActivity extends Activity implements OnClickListener {
         if (v.getId() == R.id.refresh) {
             MuseManager.refreshPairedMuses();
             List<Muse> pairedMuses = MuseManager.getPairedMuses();
-            List<String> spinnerItems = new ArrayList<String>();
+            List<String> spinnerItems = new ArrayList<>();
             for (Muse m: pairedMuses) {
                 String dev_id = m.getName() + "-" + m.getMacAddress();
                 Log.i("Muse Headband", dev_id);
                 spinnerItems.add(dev_id);
             }
-            ArrayAdapter<String> adapterArray = new ArrayAdapter<String> (
+            ArrayAdapter<String> adapterArray = new ArrayAdapter<> (
                     this, android.R.layout.simple_spinner_item, spinnerItems);
             musesSpinner.setAdapter(adapterArray);
         }
@@ -637,10 +572,7 @@ public class MainActivity extends Activity implements OnClickListener {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     @Override
