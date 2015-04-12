@@ -172,7 +172,14 @@ public class MainActivity extends Activity implements OnClickListener {
             }
         }
 
+        private int counter = 0;
+        private double[][] averages = new double[4][100];
         private void updateEeg(final ArrayList<Double> data) {
+            if (counter >= 100) {
+                double avg = calculateAverage(averages);
+                receiveMuseArtifactPacket(new byte[1] { avg });
+                averages = new double[4][100];
+            }
             Activity activity = activityRef.get();
             if (activity != null) {
                 activity.runOnUiThread(new Runnable() {
@@ -190,9 +197,23 @@ public class MainActivity extends Activity implements OnClickListener {
                             "%6.2f", data.get(Eeg.FP2.ordinal())));
                          tp10.setText(String.format(
                             "%6.2f", data.get(Eeg.TP10.ordinal())));
+
+                         averages[0][counter] = Eeg.TP9.ordinal();
+                         averages[1][counter] = Eeg.FP1.ordinal();
+                         averages[2][counter] = Eeg.FP2.ordinal();
+                         averages[3][counter] = Eeg.TP10.ordinal();
+                         counter++;
                     }
                 });
             }
+        }
+
+        private double calculateAverage(double[][] avgs) {
+            double avg = 0;
+            for (int i = 0; i < avgs.length; i++)
+                for (int j = 0; j < avgs[i].length; j++)
+                    avg += Math.pow(avgs[i][j], 2);
+            return Math.sqrt(avg);
         }
 
         private void updateAlphaRelative(final ArrayList<Double> data) {
@@ -224,6 +245,15 @@ public class MainActivity extends Activity implements OnClickListener {
     private DataListener dataListener = null;
     private boolean dataTransmission = true;
 
+    Bluetooth_Blend_Interface BTAI; // BlueTooth Arduino Interface (BTAI) object
+    boolean enable_BT_arm = true;
+    boolean isBTConnected;
+    Button mConnectBtn;
+
+    public void setBTConnected(boolean toSet){
+        isBTConnected = toSet;
+    }
+
     public MainActivity() {
         // Create listeners and pass reference to activity to them
         WeakReference<Activity> weakActivity =
@@ -245,6 +275,21 @@ public class MainActivity extends Activity implements OnClickListener {
         Button pauseButton = (Button) findViewById(R.id.pause);
         pauseButton.setOnClickListener(this);
         Log.i("Muse Headband", "libmuse version=" + LibMuseVersion.SDK_VERSION);
+
+        if (enable_BT_arm) {
+            BTAI = new Bluetooth_Blend_Interface(this, enable_BT_arm);
+            registerReceiver(BTAI.get_mGattUpdateReceiver(), Bluetooth_Blend_Interface.makeGattUpdateIntentFilter());
+        }
+        mConnectBtn = (Button)findViewById(R.id.connect_btn);
+        mConnectBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!isBTConnected && enable_BT_arm)
+                    BTAI.connect();
+                else
+                    BTAI.disconnect();
+            }
+        });
     }
 
     @Override
@@ -344,5 +389,20 @@ public class MainActivity extends Activity implements OnClickListener {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (BTAI != null) {
+            registerReceiver(BTAI.get_mGattUpdateReceiver(), Bluetooth_Blend_Interface.makeGattUpdateIntentFilter());
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(BTAI != null)
+            unregisterReceiver(BTAI.get_mGattUpdateReceiver());
     }
 }
