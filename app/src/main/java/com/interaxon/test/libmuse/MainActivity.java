@@ -36,6 +36,11 @@ import com.interaxon.libmuse.MuseManager;
 import com.interaxon.libmuse.MusePreset;
 import com.interaxon.libmuse.MuseVersion;
 
+import org.encog.ml.data.basic.BasicMLData;
+import org.encog.neural.networks.BasicNetwork;
+import org.encog.persist.EncogDirectoryPersistence;
+
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +94,7 @@ public class MainActivity extends Activity implements OnClickListener {
             final String full = "Muse " + p.getSource().getMacAddress() +
                     " " + status;
             Log.i("Muse Headband", full);
+            System.out.println("muse headband " + full);
             Activity activity = activityRef.get();
             // UI thread is used here only because we need to update
             // TextView values. You don't have to use another thread, unless
@@ -140,7 +146,7 @@ public class MainActivity extends Activity implements OnClickListener {
         double beta = 0.0;
         double gamma = 0.0;
         double theta = 0.0;
-        int n = 5;
+        int n = 175;
         ArrayList<Double> alphaList = new ArrayList<>();
         ArrayList<Double> betaList = new ArrayList<>();
         ArrayList<Double> gammaList = new ArrayList<>();
@@ -148,36 +154,36 @@ public class MainActivity extends Activity implements OnClickListener {
         @Override
         public void receiveMuseDataPacket(MuseDataPacket p) {
             Log.i("", (p.getPacketType()).toString());
-            if ((p.getPacketType()).toString().equals("ALPHA_ABSOLUTE")) {
+            if (p.getPacketType() == MuseDataPacketType.ALPHA_ABSOLUTE) {
                 alpha = updateAlphaAbsolute(p.getValues());
-                if (! (alphaList.size() >= n)) {
+                if ( alphaList.size() < n) {
                     alphaList.add(alpha);
                 } else {
                     alphaList.remove(0);
                     alphaList.add(alpha);
                 }
             }
-            if ((p.getPacketType()).toString().equals("BETA_ABSOLUTE")) {
+            if (p.getPacketType() == MuseDataPacketType.BETA_ABSOLUTE) {
                 beta = updateBetaAbsolute(p.getValues());
-                if (! (betaList.size() >= n)) {
+                if (betaList.size() < n) {
                     betaList.add(beta);
                 } else {
                     betaList.remove(0);
                     betaList.add(beta);
                 }
             }
-            if ((p.getPacketType()).toString().equals("GAMMA_ABSOLUTE")) {
+            if (p.getPacketType() == MuseDataPacketType.GAMMA_ABSOLUTE) {
                 gamma = updateGammaAbsolute(p.getValues());
-                if (! (gammaList.size() >= n)) {
+                if (gammaList.size() < n) {
                     gammaList.add(gamma);
                 } else {
                     gammaList.remove(0);
                     gammaList.add(gamma);
                 }
             }
-            if ((p.getPacketType()).toString().equals("THETA_ABSOLUTE")) {
+            if (p.getPacketType() == MuseDataPacketType.THETA_ABSOLUTE) {
                 theta = updateThetaAbsolute(p.getValues());
-                if (! (thetaList.size() >= n)) {
+                if (thetaList.size() < n) {
                     thetaList.add(theta);
                 } else {
                     thetaList.remove(0);
@@ -185,17 +191,19 @@ public class MainActivity extends Activity implements OnClickListener {
                 }
             }
             
-            ArrayList<ArrayList<Double>> matrix = new ArrayList<>();
-            matrix.add(alphaList);
-            matrix.add(betaList);
-            matrix.add(gammaList);
-            matrix.add(thetaList);
+            double[] completeList= new double[alphaList.size() * 4];
+            for (int i = 0; i < alphaList.size(); i++) {
+                completeList[i] = alphaList.get(i);
+                completeList[i + alphaList.size()] = betaList.get(i);
+                completeList[i + alphaList.size() * 2] = gammaList.get(i);
+                completeList[i + alphaList.size() * 3] = thetaList.get(i);
+            }
 
-            //update score calculation??
-            double score = beta + gamma - theta - alpha;
+            double score = network.compute(new BasicMLData(completeList)).getData(0);
+
             byte[] scores = new byte[1];
             scores[0] = (byte)score;
-            Log.i("", ((Double)score).toString());
+            Log.i("", score + "");
             BTAI.sendData(scores);
         }
 
@@ -475,6 +483,7 @@ public class MainActivity extends Activity implements OnClickListener {
         }
     }
 
+    private BasicNetwork network;
     private Muse muse = null;
     private ConnectionListener connectionListener = null;
     private DataListener dataListener = null;
@@ -510,6 +519,13 @@ public class MainActivity extends Activity implements OnClickListener {
         Button pauseButton = (Button) findViewById(R.id.pause);
         pauseButton.setOnClickListener(this);
         Log.i("Muse Headband", "libmuse version=" + LibMuseVersion.SDK_VERSION);
+
+        try {
+            network = (BasicNetwork) EncogDirectoryPersistence.loadObject(getAssets().open("network"));
+            System.out.println("ok");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (enable_BT_arm) {
             BTAI = new Bluetooth_Blend_Interface(this, enable_BT_arm);

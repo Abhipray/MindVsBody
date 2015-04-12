@@ -28,4 +28,5 @@ dependencies {
     compile 'com.android.support:support-v4:19.1.0'
     compile files('libs/libmuseandroid.jar')
     compile 'com.github.PhilJay:MPAndroidChart:v2.0.9'
+    compile files('libs/encog-core-3.3.0.jar')
 }
