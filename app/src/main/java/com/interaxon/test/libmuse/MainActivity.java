@@ -17,6 +17,10 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.interaxon.libmuse.Accelerometer;
 import com.interaxon.libmuse.ConnectionState;
 import com.interaxon.libmuse.Eeg;
@@ -64,6 +68,8 @@ import bluetooth_utilities.Bluetooth_Blend_Interface;
  * on the screen.
  */
 public class MainActivity extends Activity implements OnClickListener {
+
+    final int SAMPLE_LENGTH = 20;
     /**
      * Connection listener updates UI with new connection status and logs it.
      */
@@ -184,9 +190,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     public void run() {
                         if (counter >= 200) {
                             byte[] avg = new byte[1];
-                            double val = calculateAverage(averages);
-                            avg[0] = (byte)val;
-                            Log.i("",((Double)val).toString());
+                            avg[0] = (byte) calculateAverage(averages);
                             BTAI.sendData(avg);
                             averages = new double[4][200];
                             counter = 0;
@@ -210,13 +214,65 @@ public class MainActivity extends Activity implements OnClickListener {
                         averages[2][counter] = data.get(Eeg.FP2.ordinal());
                         averages[3][counter] = data.get(Eeg.TP10.ordinal());
                         counter++;
+
+                        // Update graph to reflect this set of samples
+                        double[] allAverages = new double[SAMPLE_LENGTH];
+                        for (int i = 0; i < SAMPLE_LENGTH; i++) {
+                            allAverages[i] = averages[0][i] + averages[1][i] + averages[2][i] + averages[3][i];
+                        }
+                        updateChart((LineChart) findViewById(R.id.line_chart), allAverages);
                     }
                 });
             }
         }
 
+        /**
+         * Updates the plot based on the newly sampled data points.
+         *
+         * @param chart: A LineChart object retrieved from the main UI via findViewById
+         * @param dataPoints: A double array of length SAMPLE_LENGTH to plot
+         */
+        public void updateChart(LineChart chart, double[] dataPoints) {
+            // Clear the chart first, if applicable
+            try {
+                chart.getData().removeDataSet(1);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // Initialize x and y values for plotting
+            ArrayList<String> xVals = new ArrayList<String>();
+            for (int i = 0; i < SAMPLE_LENGTH; i++) {
+                xVals.add((i) + "");
+            }
+            ArrayList<Entry> yVals = new ArrayList<Entry>();
+            for (int i = 0; i < SAMPLE_LENGTH; i++) {
+                yVals.add(new Entry((float)dataPoints[i], i));
+            }
+
+            // Create the data sets and add it to the plot's LineData
+            LineDataSet dataSet = new LineDataSet(yVals, "DataSet 1");
+            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            dataSets.add(dataSet);
+            LineData data = new LineData(xVals, dataSets);
+
+            // Hide axes and other text
+            chart.setDescription("");
+            chart.getAxisLeft().setDrawLabels(false);
+            chart.getAxisRight().setDrawLabels(false);
+            chart.getXAxis().setDrawLabels(false);
+            chart.getLegend().setEnabled(false);
+
+            // Set the data on the UI
+            chart.setData(data);
+
+            // Update the chart
+            chart.notifyDataSetChanged();
+            chart.invalidate();
+        }
+
         private final double MAX = 3.2E5;
-        private final double MIN = 2E5 ;
+        private final double MIN = 2E5;
         private double calculateAverage(double[][] avgs) {
             double avg = 0;
             for (int i = 0; i < avgs.length; i++)
@@ -256,7 +312,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
     Bluetooth_Blend_Interface BTAI; // BlueTooth Arduino Interface (BTAI) object
     boolean enable_BT_arm = true;
-    boolean isBTConnected;
+    boolean isBTConnected = false;
     Button mConnectBtn;
 
     public void setBTConnected(boolean toSet){

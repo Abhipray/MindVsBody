@@ -21,8 +21,11 @@ android {
         }
     }
 }
-
+repositories {
+    maven { url "https://jitpack.io" }
+}
 dependencies {
     compile 'com.android.support:support-v4:19.1.0'
     compile files('libs/libmuseandroid.jar')
+    compile 'com.github.PhilJay:MPAndroidChart:v2.0.9'
 }
