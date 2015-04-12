@@ -202,7 +202,7 @@ public class MainActivity extends Activity implements OnClickListener {
             double score = network.compute(new BasicMLData(completeList)).getData(0);
 
             byte[] scores = new byte[1];
-            scores[0] = (byte)score;
+            scores[0] = (byte)(score * 255);
             Log.i("", score + "");
             BTAI.sendData(scores);
         }
