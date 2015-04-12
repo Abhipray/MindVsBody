@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/eddie/AndroidStudioProjects/MindVsMuscle/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.3/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="81d42bf983a8741f4888a6e333e454e4a5e0eeb7">
+        <dex dex="/Users/eddie/AndroidStudioProjects/MindVsMuscle/app/build/intermediates/pre-dexed/debug/classes-8128246058e0f5356b6164acefd9750449a5df56.jar" />
+    </item>
+    <item
+        jar="/Users/eddie/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/21.0.3/support-annotations-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="4b74cefe1f0c1b819e7260c8627a14674e37fd35">
+        <dex dex="/Users/eddie/AndroidStudioProjects/MindVsMuscle/app/build/intermediates/pre-dexed/debug/support-annotations-21.0.3-bd7e51bd2416428aa980efb8d419328d61d9aa7e.jar" />
+    </item>
+    <item
+        jar="/Users/eddie/AndroidStudioProjects/MindVsMuscle/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="2c91c949a45a21cdecf26e03951e46c7beec9ad8">
+        <dex dex="/Users/eddie/AndroidStudioProjects/MindVsMuscle/app/build/intermediates/pre-dexed/debug/classes-4e1549cc5f620baf9cb3c1bbd3b6f436557f01da.jar" />
+    </item>
+    <item
+        jar="/Users/eddie/AndroidStudioProjects/MindVsMuscle/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/libs/internal_impl-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="01ec05bfbafcc07646ba813000bf2ef11742dd03">
+        <dex dex="/Users/eddie/AndroidStudioProjects/MindVsMuscle/app/build/intermediates/pre-dexed/debug/internal_impl-21.0.3-0a3db3c88d3a57e1da36a13e1b9fa23789b086c4.jar" />
+    </item>
+
+</items>
