@@ -94,7 +94,6 @@ public class MainActivity extends Activity implements OnClickListener {
             final String full = "Muse " + p.getSource().getMacAddress() +
                     " " + status;
             Log.i("Muse Headband", full);
-            System.out.println("muse headband " + full);
             Activity activity = activityRef.get();
             // UI thread is used here only because we need to update
             // TextView values. You don't have to use another thread, unless
@@ -190,7 +189,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     thetaList.add(theta);
                 }
             }
-            
+
             double[] completeList= new double[alphaList.size() * 4];
             for (int i = 0; i < alphaList.size(); i++) {
                 completeList[i] = alphaList.get(i);
@@ -358,8 +357,8 @@ public class MainActivity extends Activity implements OnClickListener {
                         }
                         byte[] avg = new byte[1];
                         avg[0] = (byte) (calculateAverage(averages_alpha, 100) * 1000);
-                        String vals =  Byte.toString(avg[0]);
-                        Log_Utilities.Utilities.append_text_to_file("alpha.txt", vals + "\n");
+//                        String vals =  Byte.toString(avg[0]);
+//                        Log_Utilities.Utilities.append_text_to_file("alpha.txt", vals + "\n");
                         averages_alpha = new double[2][50];
                         final_alpha = avg[0];
                     }
@@ -395,8 +394,8 @@ public class MainActivity extends Activity implements OnClickListener {
                         }
                         byte[] avg = new byte[1];
                         avg[0] = (byte) (calculateAverage(averages_beta, 200) * 1000);
-                        String vals =  Byte.toString(avg[0]);
-                        Log_Utilities.Utilities.append_text_to_file("beta.txt", vals + "\n");
+//                        String vals =  Byte.toString(avg[0]);
+//                        Log_Utilities.Utilities.append_text_to_file("beta.txt", vals + "\n");
                         averages_beta = new double[4][50];
                         final_beta = avg[0];
                     }
@@ -432,8 +431,8 @@ public class MainActivity extends Activity implements OnClickListener {
                           }
                             byte[] avg = new byte[1];
                             avg[0] = (byte) (calculateAverage(averages_gamma, 200) * 1000);
-                            String vals =  Byte.toString(avg[0]);
-                            Log_Utilities.Utilities.append_text_to_file("gamma.txt", vals + "\n");
+//                            String vals =  Byte.toString(avg[0]);
+//                            Log_Utilities.Utilities.append_text_to_file("gamma.txt", vals + "\n");
                             averages_gamma = new double[4][50];
                             final_gamma = avg[0];
                     }
@@ -472,8 +471,8 @@ public class MainActivity extends Activity implements OnClickListener {
                         }
                         byte[] avg = new byte[1];
                         avg[0] = (byte) (calculateAverage(averages_theta,200) * 1000);
-                        String vals =  Byte.toString(avg[0]);
-                        Log_Utilities.Utilities.append_text_to_file("theta.txt", vals + "\n");
+//                        String vals =  Byte.toString(avg[0]);
+//                        Log_Utilities.Utilities.append_text_to_file("theta.txt", vals + "\n");
                         averages_theta = new double[4][50];
                         final_theta = avg[0];
                     }
