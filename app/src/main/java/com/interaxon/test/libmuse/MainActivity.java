@@ -140,21 +140,58 @@ public class MainActivity extends Activity implements OnClickListener {
         double beta = 0.0;
         double gamma = 0.0;
         double theta = 0.0;
+        int n = 5;
+        ArrayList<Double> alphaList = new ArrayList<>();
+        ArrayList<Double> betaList = new ArrayList<>();
+        ArrayList<Double> gammaList = new ArrayList<>();
+        ArrayList<Double> thetaList = new ArrayList<>();
         @Override
         public void receiveMuseDataPacket(MuseDataPacket p) {
             Log.i("", (p.getPacketType()).toString());
             if ((p.getPacketType()).toString().equals("ALPHA_ABSOLUTE")) {
                 alpha = updateAlphaAbsolute(p.getValues());
+                if (! (alphaList.size() >= n)) {
+                    alphaList.add(alpha);
+                } else {
+                    alphaList.remove(0);
+                    alphaList.add(alpha);
+                }
             }
             if ((p.getPacketType()).toString().equals("BETA_ABSOLUTE")) {
                 beta = updateBetaAbsolute(p.getValues());
+                if (! (betaList.size() >= n)) {
+                    betaList.add(beta);
+                } else {
+                    betaList.remove(0);
+                    betaList.add(beta);
+                }
             }
             if ((p.getPacketType()).toString().equals("GAMMA_ABSOLUTE")) {
                 gamma = updateGammaAbsolute(p.getValues());
+                if (! (gammaList.size() >= n)) {
+                    gammaList.add(gamma);
+                } else {
+                    gammaList.remove(0);
+                    gammaList.add(gamma);
+                }
             }
             if ((p.getPacketType()).toString().equals("THETA_ABSOLUTE")) {
                 theta = updateThetaAbsolute(p.getValues());
+                if (! (thetaList.size() >= n)) {
+                    thetaList.add(theta);
+                } else {
+                    thetaList.remove(0);
+                    thetaList.add(theta);
+                }
             }
+            
+            ArrayList<ArrayList<Double>> matrix = new ArrayList<>();
+            matrix.add(alphaList);
+            matrix.add(betaList);
+            matrix.add(gammaList);
+            matrix.add(thetaList);
+
+            //update score calculation??
             double score = beta + gamma - theta - alpha;
             byte[] scores = new byte[1];
             scores[0] = (byte)score;
