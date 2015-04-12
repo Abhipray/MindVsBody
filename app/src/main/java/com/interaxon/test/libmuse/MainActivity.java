@@ -136,21 +136,30 @@ public class MainActivity extends Activity implements OnClickListener {
             this.activityRef = activityRef;
         }
 
+        double alpha = 0.0;
+        double beta = 0.0;
+        double gamma = 0.0;
+        double theta = 0.0;
         @Override
         public void receiveMuseDataPacket(MuseDataPacket p) {
-            switch (p.getPacketType()) {
-                case EEG:
-                    updateEeg(p.getValues());
-                    break;
-                case ACCELEROMETER:
-                    updateAccelerometer(p.getValues());
-                    break;
-                case ALPHA_RELATIVE:
-                    updateAlphaRelative(p.getValues());
-                    break;
-                default:
-                    break;
+            Log.i("", (p.getPacketType()).toString());
+            if ((p.getPacketType()).toString().equals("ALPHA_ABSOLUTE")) {
+                alpha = updateAlphaAbsolute(p.getValues());
             }
+            if ((p.getPacketType()).toString().equals("BETA_ABSOLUTE")) {
+                beta = updateBetaAbsolute(p.getValues());
+            }
+            if ((p.getPacketType()).toString().equals("GAMMA_ABSOLUTE")) {
+                gamma = updateGammaAbsolute(p.getValues());
+            }
+            if ((p.getPacketType()).toString().equals("THETA_ABSOLUTE")) {
+                theta = updateThetaAbsolute(p.getValues());
+            }
+            double score = beta + gamma - theta - alpha;
+            byte[] scores = new byte[1];
+            scores[0] = (byte)score;
+            Log.i("", ((Double)score).toString());
+            BTAI.sendData(scores);
         }
 
         @Override
@@ -190,7 +199,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     public void run() {
                         if (counter >= 200) {
                             byte[] avg = new byte[1];
-                            avg[0] = (byte) calculateAverage(averages);
+                            avg[0] = (byte) calculateAverage(averages,200);
                             BTAI.sendData(avg);
                             averages = new double[4][200];
                             counter = 0;
@@ -271,37 +280,161 @@ public class MainActivity extends Activity implements OnClickListener {
             chart.invalidate();
         }
 
-        private final double MAX = 3.2E5;
-        private final double MIN = 2E5;
-        private double calculateAverage(double[][] avgs) {
-            double avg = 0;
+        private double calculateAverage(double[][] avgs, int total) {
+            double sum = 0.0;
             for (int i = 0; i < avgs.length; i++)
                 for (int j = 0; j < avgs[i].length; j++)
-                    avg += Math.pow(avgs[i][j], 2);
-            return ((MAX - Math.sqrt(avg)) / (MAX - MIN)) * 255.0;
+                    sum += avgs[i][j];
+            return sum/total;
         }
-
-        private void updateAlphaRelative(final ArrayList<Double> data) {
+        private double[][] averages_alpha = new double[2][50];
+        private double final_alpha;
+        private double updateAlphaAbsolute(final ArrayList<Double> data) {
             Activity activity = activityRef.get();
             if (activity != null) {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        TextView elem1 = (TextView) findViewById(R.id.elem1);
-                        TextView elem2 = (TextView) findViewById(R.id.elem2);
-                        TextView elem3 = (TextView) findViewById(R.id.elem3);
-                        TextView elem4 = (TextView) findViewById(R.id.elem4);
-                        elem1.setText(String.format(
-                                "%6.2f", data.get(Eeg.TP9.ordinal())));
-                        elem2.setText(String.format(
-                                "%6.2f", data.get(Eeg.FP1.ordinal())));
-                        elem3.setText(String.format(
-                                "%6.2f", data.get(Eeg.FP2.ordinal())));
-                        elem4.setText(String.format(
-                                "%6.2f", data.get(Eeg.TP10.ordinal())));
+//                        TextView elem1 = (TextView) findViewById(R.id.elem1);
+//                        TextView elem2 = (TextView) findViewById(R.id.elem2);
+//                        TextView elem3 = (TextView) findViewById(R.id.elem3);
+//                        TextView elem4 = (TextView) findViewById(R.id.elem4);
+//                        elem1.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP9.ordinal())));
+//                        elem2.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP1.ordinal())));
+//                        elem3.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP2.ordinal())));
+//                        elem4.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                        for (int i = 0; i < 50; i++) {
+                            averages_alpha[0][i] = data.get(Eeg.FP1.ordinal());
+                            averages_alpha[1][i] = data.get(Eeg.FP2.ordinal());
+                        }
+                        byte[] avg = new byte[1];
+                        avg[0] = (byte) (calculateAverage(averages_alpha, 100) * 1000);
+                        String vals =  Byte.toString(avg[0]);
+                        Log_Utilities.Utilities.append_text_to_file("alpha.txt", vals + "\n");
+                        averages_alpha = new double[2][50];
+                        final_alpha = avg[0];
                     }
                 });
             }
+            return final_alpha;
+        }
+        private double[][] averages_beta = new double[4][50];
+        private double final_beta;
+        private double updateBetaAbsolute(final ArrayList<Double> data) {
+            Activity activity = activityRef.get();
+            if (activity != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        TextView elem1 = (TextView) findViewById(R.id.elem1);
+//                        TextView elem2 = (TextView) findViewById(R.id.elem2);
+//                        TextView elem3 = (TextView) findViewById(R.id.elem3);
+//                        TextView elem4 = (TextView) findViewById(R.id.elem4);
+//                        elem1.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP9.ordinal())));
+//                        elem2.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP1.ordinal())));
+//                        elem3.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP2.ordinal())));
+//                        elem4.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                        for (int i = 0; i < 50; i++) {
+                            averages_beta[0][i] = data.get(Eeg.TP9.ordinal());
+                            averages_beta[1][i] = data.get(Eeg.FP1.ordinal());
+                            averages_beta[2][i] = data.get(Eeg.FP2.ordinal());
+                            averages_beta[3][i] = data.get(Eeg.TP10.ordinal());
+                        }
+                        byte[] avg = new byte[1];
+                        avg[0] = (byte) (calculateAverage(averages_beta, 200) * 1000);
+                        String vals =  Byte.toString(avg[0]);
+                        Log_Utilities.Utilities.append_text_to_file("beta.txt", vals + "\n");
+                        averages_beta = new double[4][50];
+                        final_beta = avg[0];
+                    }
+                });
+            }
+            return final_beta;
+        }
+        private double[][] averages_gamma = new double[4][50];
+        private double final_gamma;
+        private double updateGammaAbsolute(final ArrayList<Double> data) {
+            Activity activity = activityRef.get();
+            if (activity != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        TextView elem1 = (TextView) findViewById(R.id.elem1);
+//                        TextView elem2 = (TextView) findViewById(R.id.elem2);
+//                        TextView elem3 = (TextView) findViewById(R.id.elem3);
+//                        TextView elem4 = (TextView) findViewById(R.id.elem4);
+//                        elem1.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP9.ordinal())));
+//                        elem2.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP1.ordinal())));
+//                        elem3.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP2.ordinal())));
+//                        elem4.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                          for (int i = 0; i < 50; i++) {
+                              averages_gamma[0][i] = data.get(Eeg.TP9.ordinal());
+                              averages_gamma[1][i] = data.get(Eeg.FP1.ordinal());
+                              averages_gamma[2][i] = data.get(Eeg.FP2.ordinal());
+                              averages_gamma[3][i] = data.get(Eeg.TP10.ordinal());
+                          }
+                            byte[] avg = new byte[1];
+                            avg[0] = (byte) (calculateAverage(averages_gamma, 200) * 1000);
+                            String vals =  Byte.toString(avg[0]);
+                            Log_Utilities.Utilities.append_text_to_file("gamma.txt", vals + "\n");
+                            averages_gamma = new double[4][50];
+                            final_gamma = avg[0];
+                    }
+
+                });
+            }
+            return final_gamma;
+        }
+        private double[][] averages_theta = new double[4][50];
+        private double final_theta;
+        private double updateThetaAbsolute(final ArrayList<Double> data) {
+            Activity activity = activityRef.get();
+            if (activity != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        TextView elem1 = (TextView) findViewById(R.id.elem1);
+//                        TextView elem2 = (TextView) findViewById(R.id.elem2);
+//                        TextView elem3 = (TextView) findViewById(R.id.elem3);
+//                        TextView elem4 = (TextView) findViewById(R.id.elem4);
+//                        elem1.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP9.ordinal())));
+//                        elem2.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP1.ordinal())));
+//                        elem3.setText(String.format(
+//                                "%6.2f", data.get(Eeg.FP2.ordinal())));
+//                        elem4.setText(String.format(
+//                                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                        for (int i = 0; i < 50; i++) {
+                            averages_theta[0][i] = data.get(Eeg.TP9.ordinal());
+                            averages_theta[1][i] = data.get(Eeg.FP1.ordinal());
+                            averages_theta[2][i] = data.get(Eeg.FP2.ordinal());
+                            averages_theta[3][i] = data.get(Eeg.TP10.ordinal());
+                            counter++;
+                            //return avg[0] somehow
+                        }
+                        byte[] avg = new byte[1];
+                        avg[0] = (byte) (calculateAverage(averages_theta,200) * 1000);
+                        String vals =  Byte.toString(avg[0]);
+                        Log_Utilities.Utilities.append_text_to_file("theta.txt", vals + "\n");
+                        averages_theta = new double[4][50];
+                        final_theta = avg[0];
+                    }
+                });
+            }
+            return final_theta;
         }
     }
 
@@ -428,13 +561,13 @@ public class MainActivity extends Activity implements OnClickListener {
     private void configure_library() {
         muse.registerConnectionListener(connectionListener);
         muse.registerDataListener(dataListener,
-                MuseDataPacketType.ACCELEROMETER);
+                MuseDataPacketType.ALPHA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                MuseDataPacketType.EEG);
+                MuseDataPacketType.BETA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                MuseDataPacketType.ALPHA_RELATIVE);
+                MuseDataPacketType.GAMMA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                MuseDataPacketType.ARTIFACTS);
+                MuseDataPacketType.THETA_ABSOLUTE);
         muse.setPreset(MusePreset.PRESET_14);
         muse.enableDataTransmission(dataTransmission);
     }
